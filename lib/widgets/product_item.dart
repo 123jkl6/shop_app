@@ -2,14 +2,16 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../model/product.dart";
+import "../model/cart.dart"; 
 
 class ProductItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final product = Provider.of<Product>(context, listen: false);
-    //above is commented out to demonstrate Consumer use.
+    //cart only used to dispatch actions, not update UI
+    final cart = Provider.of<Cart>(context,listen:false);
     //using Provider results in build method being called;
-    //using Consumer onlu rebuilds affected widget branch
+    //using Consumer only rebuilds affected widget branch
     //works well in a grid.
     print("product item build ID : "+product.id);
     return ClipRRect(
@@ -51,6 +53,7 @@ class ProductItem extends StatelessWidget {
             color: Theme.of(context).accentColor,
             onPressed: () {
               print("Add to cart : " + product.title);
+              cart.addItem(title: product.title,price:product.price,productId: product.id);
             },
           ),
         ),

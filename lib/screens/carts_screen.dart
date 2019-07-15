@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import 'package:shop_app/model/cart.dart' show Cart;
-
+import "../model/order.dart";
 import "../widgets/cart_item.dart";
 
 class CartsScreen extends StatelessWidget {
@@ -30,7 +30,7 @@ class CartsScreen extends StatelessWidget {
                     ),
                     Spacer(),
                     Chip(
-                      label: Text("\$${cart.totalAmount}",
+                      label: Text("\$${cart.totalAmount.toStringAsFixed(2)}",
                           style: TextStyle(
                             color:
                                 Theme.of(context).primaryTextTheme.title.color,
@@ -39,7 +39,18 @@ class CartsScreen extends StatelessWidget {
                     ),
                     FlatButton(
                       child: Text("ORDER NOW"),
-                      onPressed: () {},
+                      onPressed: () {
+                        print("Ordering now.");
+                        Provider.of<Orders>(
+                          context,
+                          listen: false,
+                        ).addOrder(
+                          cart.items.values.toList(),
+                          cart.totalAmount,
+                        );
+                        //clear the cart, because items are ordered. 
+                        cart.clear();
+                      },
                       textColor: Theme.of(context).primaryColor,
                     )
                   ],
@@ -51,7 +62,7 @@ class CartsScreen extends StatelessWidget {
             child: ListView.builder(
               itemCount: cart.itemCount,
               itemBuilder: (ctx, i) {
-                //naming conflict fixed above with show keyword. 
+                //naming conflict fixed above with show keyword.
                 return CartItem(
                   id: cart.items.values.toList()[i].id,
                   productId: cart.items.keys.toList()[i],

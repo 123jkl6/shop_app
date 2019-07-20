@@ -28,7 +28,7 @@ class Cart with ChangeNotifier {
   double get totalAmount {
     double total = 0.0;
 
-    _items.forEach((key,value){
+    _items.forEach((key, value) {
       total += (value.price * value.quantity);
     });
 
@@ -46,9 +46,9 @@ class Cart with ChangeNotifier {
           productId,
           (existingCartItem) => CartItem(
                 id: existingCartItem.id,
-                title:existingCartItem.title,
-                price:existingCartItem.price,
-                quantity: existingCartItem.quantity+1,
+                title: existingCartItem.title,
+                price: existingCartItem.price,
+                quantity: existingCartItem.quantity + 1,
               ));
     } else {
       //add new entry
@@ -66,6 +66,25 @@ class Cart with ChangeNotifier {
 
   void removeItem(String productId) {
     _items.remove(productId);
+    notifyListeners();
+  }
+
+  void removeSingleItem(String productId) {
+    if (!_items.containsKey(productId)) {
+      return;
+    }
+    if (_items[productId].quantity > 1) {
+      _items.update(productId, (existingItem) {
+        return CartItem(
+          id: existingItem.id,
+          title: existingItem.title,
+          price: existingItem.price,
+          quantity: existingItem.quantity - 1,
+        );
+      });
+    } else {
+      _items.remove(productId);
+    }
     notifyListeners();
   }
 

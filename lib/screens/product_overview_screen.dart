@@ -3,6 +3,8 @@ import "package:provider/provider.dart";
 import 'package:shop_app/widgets/app_drawer.dart';
 import 'package:shop_app/widgets/products_grid.dart';
 
+import "../providers/products_provider.dart";
+
 import "./carts_screen.dart";
 import "../model/product.dart";
 import "../model/cart.dart";
@@ -24,9 +26,19 @@ class ProductOverviewScreen extends StatefulWidget {
 
 class _ProductOverviewScreen extends State {
   var showOnlyFavorites = false;
+  var _isLoading = false;
 
   @override
   void initState() {
+    _isLoading = true;
+    //don't listen during initState
+    Provider.of<Products>(context, listen: false)
+        .fetchAndSetProducts()
+        .then((_) {
+      setState(() {
+        _isLoading = false;
+      });
+    });
     super.initState();
   }
 
@@ -76,7 +88,11 @@ class _ProductOverviewScreen extends State {
           )
         ],
       ),
-      body: ProductsGrid(showOnlyFavorites: showOnlyFavorites),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : ProductsGrid(showOnlyFavorites: showOnlyFavorites),
       drawer: AppDrawer(),
     );
     return scaffold;

@@ -4,6 +4,62 @@ import 'package:shop_app/model/cart.dart' show Cart;
 import "../model/order.dart";
 import "../widgets/cart_item.dart";
 
+class OrderButton extends StatefulWidget {
+  final Cart cart;
+
+  OrderButton({this.cart});
+
+  @override
+  _OrderButtonState createState() => _OrderButtonState();
+}
+
+class _OrderButtonState extends State<OrderButton> {
+  var _isLoading = false;
+  @override
+  Widget build(BuildContext context) {
+    return FlatButton(
+      child: _isLoading ? CircularProgressIndicator() : Text("ORDER NOW"),
+      onPressed: widget.cart.totalAmount <= 0 || _isLoading
+          ? null
+          : () async {
+              setState(() {
+                _isLoading = true;
+              });
+              print("Ordering now.");
+              try {
+              await Provider.of<Orders>(
+                context,
+                listen: false,
+              ).addOrder(
+                widget.cart.items.values.toList(),
+                widget.cart.totalAmount,
+              );
+              //clear the cart, because items are ordered.
+              widget.cart.clear();
+              } catch (error){
+                print(error);
+                showDialog(context: context,builder: (ctx){
+                  return AlertDialog(
+                    title: Text("Order Failed"),
+                    content: Text("Failed to send order, please try again later"),
+                    actions: <Widget>[
+                      RaisedButton(child:Text("OK"),onPressed: (){
+                        Navigator.of(context).pop();
+                      },),
+                    ],
+                  );
+                });
+              }
+              setState(() {
+                _isLoading = false;
+              });
+              
+            },
+      textColor: Theme.of(context).primaryColor,
+    );
+  }
+}
+
 class CartsScreen extends StatelessWidget {
   static const routeName = "/cart";
 
@@ -37,22 +93,9 @@ class CartsScreen extends StatelessWidget {
                           )),
                       backgroundColor: Theme.of(context).primaryColor,
                     ),
-                    FlatButton(
-                      child: Text("ORDER NOW"),
-                      onPressed: () {
-                        print("Ordering now.");
-                        Provider.of<Orders>(
-                          context,
-                          listen: false,
-                        ).addOrder(
-                          cart.items.values.toList(),
-                          cart.totalAmount,
-                        );
-                        //clear the cart, because items are ordered. 
-                        cart.clear();
-                      },
-                      textColor: Theme.of(context).primaryColor,
-                    )
+                    OrderButton(
+                      cart: cart,
+                    ),
                   ],
                 )),
           ),

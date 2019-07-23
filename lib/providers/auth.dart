@@ -10,8 +10,20 @@ class Auth with ChangeNotifier {
   DateTime _expiryDate;
   String _userId;
 
+  bool get isAuth {
+    return token != null;
+  }
+
+  String get token {
+    if (_expiryDate != null &&
+        _expiryDate.isAfter(DateTime.now()) &&
+        _token != null) {
+      return _token;
+    }
+    return null;
+  }
+
   Future<void> signup(String email, String password) async {
-   
     final response = await http.post(
       Url.firebaseSignup,
       body: json.encode({
@@ -26,7 +38,15 @@ class Auth with ChangeNotifier {
     if (responseBody["error"] != null) {
       throw HttpException(responseBody["error"]["message"]);
     }
-    
+    _token = responseBody["idToken"];
+    _userId = responseBody["localId"];
+    _expiryDate = DateTime.now().add(
+      Duration(
+        seconds: int.parse(
+          responseBody["expiresIn"],
+        ),
+      ),
+    );
   }
 
   Future<void> signin(String email, password) async {

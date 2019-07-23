@@ -1,6 +1,10 @@
 import 'dart:math';
+import "package:provider/provider.dart";
 
 import 'package:flutter/material.dart';
+import 'package:shop_app/model/http_exception.dart';
+import "../providers/products_provider.dart";
+import "../providers/auth.dart";
 
 enum AuthMode { Signup, Login }
 
@@ -45,6 +49,8 @@ class AuthScreen extends StatelessWidget {
                       transform: Matrix4.rotationZ(-8 * pi / 180)
                         ..translate(-10.0),
                       // ..translate(-10.0),
+                      //special operator to return what previous statement instead of what the chained function would return
+                      //this allows the chained function to execute for the object that it chained on.
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
                         color: Colors.deepOrange.shade900,
@@ -100,7 +106,25 @@ class _AuthCardState extends State<AuthCard> {
   var _isLoading = false;
   final _passwordController = TextEditingController();
 
-  void _submit() {
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text("An error has occured"),
+        content: Text(message),
+        actions: <Widget>[
+          FlatButton(
+            child: Text("OK"),
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          )
+        ],
+      ),
+    );
+  }
+
+  Future<void> _submit() async {
     if (!_formKey.currentState.validate()) {
       // Invalid!
       return;
@@ -109,10 +133,42 @@ class _AuthCardState extends State<AuthCard> {
     setState(() {
       _isLoading = true;
     });
-    if (_authMode == AuthMode.Login) {
-      // Log user in
-    } else {
-      // Sign user up
+    try {
+      if (_authMode == AuthMode.Login) {
+        // Log user in
+        await Provider.of<Auth>(context, listen: false).signin(
+          _authData["email"],
+          _authData["password"],
+        );
+      } else {
+        // Sign user up
+        await Provider.of<Auth>(context, listen: false).signup(
+          _authData["email"],
+          _authData["password"],
+        );
+      }
+    } on HttpException catch (error) {
+      print(error);
+      var errorMessage = "Authentication Failed";
+      var errorMessageCode = error.toString();
+      if (errorMessageCode.contains("EMAIL_EXISTS")) {
+        errorMessage = "This email adddress is already in use.";
+      } else if (errorMessageCode.contains("INVALID_EMAIL")) {
+        errorMessage = "Please enter valid email address";
+      } else if (errorMessageCode.contains("WEAK_PASSWORD")) {
+        errorMessage = "Password is too weak.";
+      } else if (errorMessageCode.contains("EMAIL_NOT_FOUND")) {
+        errorMessage = "Could not find user with given email.";
+      } else if (errorMessageCode.contains("INVALID_PASSWORD")) {
+        errorMessage = "Invalid password.";
+      }
+      _showErrorDialog(errorMessage);
+    } catch (error) {
+      print(error);
+      //unknown error
+      const errorMessage =
+          "Could not authenticate you, please try again later.";
+      _showErrorDialog(errorMessage);
     }
     setState(() {
       _isLoading = false;

@@ -11,7 +11,8 @@ class Auth with ChangeNotifier {
   String _userId;
 
   bool get isAuth {
-    return token != null;
+    print(_token);
+    return _token != null;
   }
 
   String get token {
@@ -21,6 +22,10 @@ class Auth with ChangeNotifier {
       return _token;
     }
     return null;
+  }
+
+  String get userId {
+    return _userId;
   }
 
   Future<void> signup(String email, String password) async {
@@ -34,19 +39,6 @@ class Auth with ChangeNotifier {
     );
     final responseBody = json.decode(response.body);
     print(responseBody);
-    // if responseBody has error
-    if (responseBody["error"] != null) {
-      throw HttpException(responseBody["error"]["message"]);
-    }
-    _token = responseBody["idToken"];
-    _userId = responseBody["localId"];
-    _expiryDate = DateTime.now().add(
-      Duration(
-        seconds: int.parse(
-          responseBody["expiresIn"],
-        ),
-      ),
-    );
   }
 
   Future<void> signin(String email, password) async {
@@ -60,5 +52,24 @@ class Auth with ChangeNotifier {
     );
     final responseBody = json.decode(response.body);
     print(responseBody);
+    _token = responseBody["idToken"];
+    // if responseBody has error
+    if (responseBody["error"] != null) {
+      throw HttpException(responseBody["error"]["message"]);
+    }
+    _token = responseBody["idToken"];
+    _userId = responseBody["localId"];
+    _expiryDate = DateTime.now().add(
+      Duration(
+        seconds: int.parse(
+          responseBody["expiresIn"],
+        ),
+      ),
+    );
+
+    print(_token);
+    print(_userId);
+    print(_expiryDate);
+    notifyListeners();
   }
 }

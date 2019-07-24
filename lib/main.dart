@@ -25,16 +25,19 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider.value(
-          value: Products(),
+          value: Auth(),
+        ),
+        ChangeNotifierProxyProvider<Auth, Products>(
+          builder: (ctx, auth, previousProducts) => Products(
+            previousProducts == null ? [] : previousProducts.items,
+            token: auth.token,
+          ),
         ),
         ChangeNotifierProvider.value(
           value: Cart(),
         ),
-        ChangeNotifierProvider.value(
-          value: Orders(),
-        ),
-        ChangeNotifierProvider.value(
-          value: Auth(),
+        ChangeNotifierProxyProvider<Auth,Orders>(
+          builder:(ctx,auth,previousOrders) =>Orders(previousOrders == null ? [] : previousOrders.orders,token:auth.token),
         ),
       ],
       // use consumer to navigate between auth and main screen in MaterialApp

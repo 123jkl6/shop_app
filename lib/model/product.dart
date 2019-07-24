@@ -23,9 +23,9 @@ class Product with ChangeNotifier {
       @required this.imageUrl,
       @required this.isFavorite});
 
-  void toggleFavoriteStatus() async {
-    http.Response response = await http.patch("${Url.storageUrl}/$id.json",
-        body: json.encode({isFavorite: !isFavorite}));
+  void toggleFavoriteStatus(String token,String userId) async {
+    http.Response response = await http.put("${Url.favUrl}/$userId/$id.json?auth=$token",
+        body: json.encode(!isFavorite));
     print("toggle favorite status.");
     print(response.statusCode);
     try {

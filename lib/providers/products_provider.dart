@@ -61,7 +61,8 @@ class Products with ChangeNotifier {
     return _items.firstWhere((el) => id == el.id);
   }
 
-  Future<void> fetchAndSetProducts() async {
+  Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
+    final filterString  = filterByUser ? 'orderBy="creatorId"&equalTo="$userId"' : ""; 
     print(url);
     print(token);
     final http.Response resp =
@@ -71,14 +72,15 @@ class Products with ChangeNotifier {
     final respBody = json.decode(resp.body) as Map<String, dynamic>;
     print(respBody);
 
-    if (respBody == null) {
-      return;
-    }
-
-    http.Response response = await http.get("$url.json?auth=$token");
+    // if (respBody == null) {
+    //   return;
+    // }
+    print("$url.json?auth=$token&$filterString");
+    http.Response response = await http.get("$url.json?auth=$token&$filterString");
     final responseBody = json.decode(response.body) as Map<String, dynamic>;
     final List<Product> loadedProducts = [];
     print(response.statusCode);
+    print(response);
     print(responseBody);
     if (responseBody == null) {
       notifyListeners();
@@ -91,8 +93,11 @@ class Products with ChangeNotifier {
           title: prodData["title"],
           description: prodData["description"],
           price: prodData["price"],
-          isFavorite: respBody[prodId] != null ? respBody[prodId] : false,
+          isFavorite: respBody == null
+              ? false
+              : (respBody[prodId] != null ? respBody[prodId] : false),
           imageUrl: prodData["imageUrl"],
+          creatorId: prodData["creatorId"],
         ),
       );
     });
@@ -101,8 +106,16 @@ class Products with ChangeNotifier {
   }
 
   Future<void> addProduct(product) async {
-    http.Response response =
-        await http.post("$url.json?auth=$token", body: jsonEncode(product));
+    http.Response response = await http.post("$url.json?auth=$token",
+        body: json.encode({
+          "id": product.id,
+          "title": product.title,
+          "description": product.description,
+          "price": product.price,
+          "imageUrl": product.imageUrl,
+          "isFavorite": product.isFavorite,
+          "creatorId": userId,
+        }));
     var responseBody = json.decode(response.body);
     print(responseBody);
     if (response.statusCode == 200 || response.statusCode == 201) {

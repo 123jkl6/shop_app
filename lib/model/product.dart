@@ -14,6 +14,7 @@ class Product with ChangeNotifier {
   final double price;
   final String imageUrl;
   bool isFavorite;
+  final String creatorId;
 
   Product(
       {@required this.id,
@@ -21,7 +22,8 @@ class Product with ChangeNotifier {
       @required this.description,
       @required this.price,
       @required this.imageUrl,
-      @required this.isFavorite});
+      @required this.isFavorite,
+      this.creatorId});
 
   void toggleFavoriteStatus(String token,String userId) async {
     http.Response response = await http.put("${Url.favUrl}/$userId/$id.json?auth=$token",

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import "package:provider/provider.dart";
 import 'package:shop_app/screens/edit_product_screen.dart';
+import 'package:shop_app/screens/splash-screen.dart';
 import 'package:shop_app/screens/user_products_screen.dart';
 
 import "./screens/product_overview_screen.dart";
@@ -37,8 +38,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider.value(
           value: Cart(),
         ),
-        ChangeNotifierProxyProvider<Auth,Orders>(
-          builder:(ctx,auth,previousOrders) =>Orders(previousOrders == null ? [] : previousOrders.orders,token:auth.token),
+        ChangeNotifierProxyProvider<Auth, Orders>(
+          builder: (ctx, auth, previousOrders) => Orders(
+            previousOrders == null ? [] : previousOrders.orders,
+            token: auth.token,
+            userId: auth.userId,
+          ),
         ),
       ],
       // use consumer to navigate between auth and main screen in MaterialApp
@@ -50,7 +55,16 @@ class MyApp extends StatelessWidget {
             accentColor: Colors.deepOrange,
             fontFamily: "Lato",
           ),
-          home: authData.isAuth ? ProductOverviewScreen() : AuthScreen(),
+          home: authData.isAuth
+              ? ProductOverviewScreen()
+              : FutureBuilder(
+                  future: authData.tryAutoLogin(),
+                  builder: (ctx, authResultSnapshot) =>
+                      authResultSnapshot.connectionState ==
+                              ConnectionState.waiting
+                          ? SplashScreen()
+                          : AuthScreen(),
+                ),
           routes: {
             ProductDetailScreen.routeName: (ctx) => ProductDetailScreen(),
             CartsScreen.routeName: (ctx) => CartsScreen(),
